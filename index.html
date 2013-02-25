@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+  <head>
+
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="css/bootstrap-responsive.css">
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.js"></script>
+
+    <style type="text/css">
+      #standings .grayClass {
+        background-color: #ccc;
+      }
+      #standings .lightGray {
+        background-color: rgb(171, 171, 171);
+      }
+      #standings p {
+        margin-bottom: 0;
+        padding: 10px;
+      }
+    </style>    
+   
+
+	 <script type="text/javascript">
+      var teamArray = new Array();
+
+      var Team = function(teamName, mgName, phoneNum, sponsorName, mgZip) {
+        this.teamName = teamName;
+        this.mgName = mgName;
+        this.phoneNum = phoneNum;
+        this.sponsorName = sponsorName;
+        this.mgZip = mgZip;
+        this.wins = 0;
+        this.losses = 0;
+ 
+  }; 
+
+      $.ajax({
+        type: "GET",
+        url: "/backliftapp/teams",
+        success: function(result) {
+          for (var i = 0; i < result.length; i++) {
+            var tempTeam = new Team (result[i]["teamName"], result[i]["mgName"], result[i]["phoneNum"], result[i]["sponsorName"], result[i]["mgZip"]);
+            console.log(result["teamName"]);
+            teamArray.push(tempTeam);            
+          };
+          writeResults();
+        }
+      });
+
+      function writeResults() {
+        $("#standings").html("");
+         for(var i = 0; i < teamArray.length; i++) {
+          console.log("woo");
+          
+          var textNode = document.createTextNode(teamArray[i].teamName);
+          console.log(textNode);
+
+          var para = document.createElement("p");
+
+          para.appendChild(textNode);  
+      
+          if(i % 2 === 0) para.className = "grayClass popup";
+          else para.className = "lightGray popup";
+          document.getElementById("standings").appendChild(para);
+          var subDiv = document.createElement("div");
+
+          $(subDiv).html("Team Name: " + teamArray[i].teamName + "</br>Managed By: " + teamArray[i].mgName + "</br>Manager Phone: " + teamArray[i].phoneNum + "</br>Team Sponsor: " + teamArray[i].sponsorName + "</br>Zip Code: " + teamArray[i].mgZip);
+      
+          var divText = document.createTextNode("");
+          subDiv.appendChild(divText);
+          para.appendChild(subDiv);
+          $("#standings p div").hide();
+
+          $("#standings p").hover(
+            function() {
+              $(this).children().last().show();
+            },
+            function() {
+              $(this).children().last().hide();
+            });
+        }
+      };
+
+  	  
+
+  	  function createTeam(form) {
+  	  	var sampleTeam = new Team (form.teamName.value, form.mgName.value, form.phoneNum.value, form.sponsorName.value, form.mgZip.value);
+  	  	teamArray.push(sampleTeam);
+
+        $.ajax({
+          type: "POST",
+          url: "/backliftapp/teams",
+          data: {
+            teamName: form.teamName.value,
+            mgName: form.mgName.value,
+            phoneNum: form.phoneNum.value,
+            sponsorName: form.sponsorName.value,
+            mgZip: form.mgZip.value
+          },
+          success: function(result) {
+            console.log(result);
+          }
+        });
+
+         $("#teamForm")[0].reset();   	  
+
+         writeResults();
+      };
+
+   </script>
+
+
+  </head>
+  <body>
+  	<!-- NAVBAR
+    ================================================== -->
+    <!--<div class="navbar-wrapper">
+      <!-- Wrap the .navbar in .container to center it within the absolutely positioned parent. -->
+      <div class="container">
+
+        <div class="navbar navbar-inverse">
+          <div class="navbar-inner">
+            <!-- Responsive Navbar Part 1: Button for triggering responsive navbar (not covered in tutorial). Include responsive CSS to utilize. -->
+            <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="brand" href="#">Beer League Baseball Challenge</a>
+            <!-- Responsive Navbar Part 2: Place all navbar contents you want collapsed withing .navbar-collapse.collapse. -->
+            
+          </div><!-- /.navbar-inner -->
+        </div><!-- /.navbar -->
+    
+
+    <div class="container">
+      <div class="row">
+       <div class="span2">
+        <form name="myform" action="" method="get" id="teamForm">
+          <p>Team Name: <input type="text" name="teamName" value=""></p>
+          <p>Manager Name: <input type="text" name="mgName" value=""></p>
+          <p>Phone Number: <input type="text" name="phoneNum" value=""></p>
+          <p>Sponsor: <input type="text" name="sponsorName" value=""></p>
+          <p>Zip Code: <input type="text" name="mgZip" value=""></p>
+          <input type="button" name="button" value="Submit" onClick="createTeam(this.form);">
+        </form>        
+      </div>
+      <div class="span8 offset2">
+        <p><strong>Standings:</strong></p><div id="standings"></div>
+      </div>
+     </div>
+    </div>      
+  
+  </body>
+</html>
