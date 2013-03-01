@@ -23,16 +23,18 @@
    
 
 	 <script type="text/javascript">
+
+
       var teamArray = new Array();
 
-      var Team = function(teamName, mgName, phoneNum, sponsorName, mgZip) {
+      var Team = function(teamName, mgName, phoneNum, sponsorName, mgZip, wins, losses) {
         this.teamName = teamName;
         this.mgName = mgName;
         this.phoneNum = phoneNum;
         this.sponsorName = sponsorName;
         this.mgZip = mgZip;
-        this.wins = 0;
-        this.losses = 0;
+        this.wins = wins;
+        this.losses = losses;
  
   }; 
 
@@ -41,36 +43,53 @@
         url: "/backliftapp/teams",
         success: function(result) {
           for (var i = 0; i < result.length; i++) {
-            var tempTeam = new Team (result[i]["teamName"], result[i]["mgName"], result[i]["phoneNum"], result[i]["sponsorName"], result[i]["mgZip"]);
-            console.log(result["teamName"]);
-            teamArray.push(tempTeam);            
+            var tempTeam = new Team (result[i]["teamName"], result[i]["mgName"], result[i]["phoneNum"], result[i]["sponsorName"], result[i]["mgZip"], result[i]["wins"], result[i]["losses"]);
+            teamArray.push(tempTeam);                        
           };
           writeResults();
         }
       });
 
+      function sortArray(ta1) {
+        //code goes here, this will return a sorted array of teamArray
+        var sortedArray = new Array();
+        var ta2 = ta1;
+        while (ta2.length > 0) {
+          var mostIndex = 0;
+          for (var i = 1; i < ta2.length; i++) {
+            if (ta2[mostIndex].wins < ta2[i].wins) {
+              mostIndex = i;
+            };
+          };
+          sortedArray.push(ta2[mostIndex]);
+          ta2.splice(mostIndex, 1);
+        };
+        console.log(sortedArray);
+        return sortedArray;
+      };
+
       function writeResults() {
+
+        var sortedArray = sortArray(teamArray); //simply a method call
+        
         $("#standings").html("");
-         for(var i = 0; i < teamArray.length; i++) {
-          console.log("woo");
+         for(var i = 0; i < sortedArray.length; i++) {
+          var textNode = document.createTextNode(sortedArray[i].teamName);
           
-          var textNode = document.createTextNode(teamArray[i].teamName);
-          console.log(textNode);
+          var divTN = document.createElement("p");
 
-          var para = document.createElement("p");
-
-          para.appendChild(textNode);  
+          divTN.appendChild(textNode);  
       
-          if(i % 2 === 0) para.className = "grayClass popup";
-          else para.className = "lightGray popup";
-          document.getElementById("standings").appendChild(para);
+          if(i % 2 === 0) divTN.className = "grayClass popup";
+          else divTN.className = "lightGray popup";
+          document.getElementById("standings").appendChild(divTN);
           var subDiv = document.createElement("div");
 
-          $(subDiv).html("Team Name: " + teamArray[i].teamName + "</br>Managed By: " + teamArray[i].mgName + "</br>Manager Phone: " + teamArray[i].phoneNum + "</br>Team Sponsor: " + teamArray[i].sponsorName + "</br>Zip Code: " + teamArray[i].mgZip);
+          $(subDiv).html("Team Name: " + sortedArray[i].teamName + "</br>Managed By: " + sortedArray[i].mgName + "</br>Manager Phone: " + sortedArray[i].phoneNum + "</br>Team Sponsor: " + sortedArray[i].sponsorName + "</br>Zip Code: " + sortedArray[i].mgZip);
       
           var divText = document.createTextNode("");
           subDiv.appendChild(divText);
-          para.appendChild(subDiv);
+          divTN.appendChild(subDiv);
           $("#standings p div").hide();
 
           $("#standings p").hover(
@@ -86,10 +105,7 @@
   	  
 
   	  function createTeam(form) {
-  	  	var sampleTeam = new Team (form.teamName.value, form.mgName.value, form.phoneNum.value, form.sponsorName.value, form.mgZip.value);
-  	  	teamArray.push(sampleTeam);
-
-        $.ajax({
+  	  	$.ajax({
           type: "POST",
           url: "/backliftapp/teams",
           data: {
@@ -97,16 +113,26 @@
             mgName: form.mgName.value,
             phoneNum: form.phoneNum.value,
             sponsorName: form.sponsorName.value,
-            mgZip: form.mgZip.value
+            mgZip: form.mgZip.value,
+            wins: 0,
+            losses: 0
           },
           success: function(result) {
-            console.log(result);
+            $("#teamForm")[0].reset();      
+
+            var sampleTeam = new Team (form.teamName.value, form.mgName.value, form.phoneNum.value, form.sponsorName.value, form.mgZip.value, 0, 0);
+            console.log(teamArray);
+            teamArray.push(sampleTeam);
+        
+
+            writeResults();
           }
         });
 
-         $("#teamForm")[0].reset();   	  
 
-         writeResults();
+
+
+         
       };
 
    </script>
@@ -151,6 +177,7 @@
         <p><strong>Standings:</strong></p><div id="standings"></div>
       </div>
      </div>
+
     </div>      
   
   </body>
