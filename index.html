@@ -4,225 +4,149 @@
 
     <link rel="stylesheet" type="text/css" href="css/bootstrap.css">
     <link rel="stylesheet" type="text/css" href="css/bootstrap-responsive.css">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
 
     <script src="js/jquery.min.js"></script>
     <script src="js/bootstrap.js"></script>
+    <script src="js/baseball.js"></script>   
+    <script src="js/jquery.validate.js"></script>
 
-    <style type="text/css">
-      #standings .grayClass {
-        background-color: #ccc;
-      }
-      #standings .lightGray {
-        background-color: rgb(171, 171, 171);
-      }
-      #standings .popup {
-        margin-bottom: 0;
-        padding: 10px;
-      }
-    </style>    
-   
-
-	 <script type="text/javascript">
-
-
-      var teamArray = new Array();
-
-      var Team = function(teamName, mgName, phoneNum, sponsorName, mgZip, wins, losses, teamId) {
-        this.teamName = teamName;
-        this.mgName = mgName;
-        this.phoneNum = phoneNum;
-        this.sponsorName = sponsorName;
-        this.mgZip = mgZip;
-        this.wins = wins;
-        this.losses = losses;
-        this.teamId = teamId;
- 
-  }; 
-
-      
-
-      $.ajax({
-        type: "GET",
-        url: "/backliftapp/teams",
-        success: function(result) {
-          for (var i = 0; i < result.length; i++) {
-            var tempTeam = new Team (result[i]["teamName"], result[i]["mgName"], result[i]["phoneNum"], result[i]["sponsorName"], result[i]["mgZip"], result[i]["wins"], result[i]["losses"], result[i]["id"]);
-            teamArray.push(tempTeam);                        
-          };
-          writeResults();
-          // for (var i = 3; i < result.length; i++) {
-          //   var teamId = result[i]["id"];
-          //   $.ajax({
-          //   type: "DELETE",
-          //   url: "/backliftapp/teams/" + teamId, 
-          //   success: function(result) { 
-          //     console.log("Deleted!");
-          //     } 
-          //   });
-          // }
-          
-        }
-      });
-
-      function sortArray(ta2) {
-        //code goes here, this will return a sorted array of teamArray
-        var sortedArray = new Array();
-        while (ta2.length > 0) {
-          var mostIndex = 0;
-          for (var i = 1; i < ta2.length; i++) {
-            if (ta2[mostIndex].wins < ta2[i].wins) {
-              mostIndex = i;
-            };
-          };
-          sortedArray.push(ta2[mostIndex]);
-          ta2.splice(mostIndex, 1);
-        };
-        console.log(sortedArray);
-        return sortedArray;
-      };
-      
-
-      function deleteTeam(deleteId) {
-        console.log(deleteId);
-        $.ajax({
-        type: "DELETE",
-        url: "/backliftapp/teams/" + deleteId, 
-        success: function(result) { 
-          console.log("Deleted!");
-          teamArray.splice(0, teamArray.length);
-          $.ajax({
-            type: "GET",
-            url: "/backliftapp/teams",
-            success: function(result) {
-              for (var i = 0; i < result.length; i++) {
-                var tempTeam = new Team (result[i]["teamName"], result[i]["mgName"], result[i]["phoneNum"], result[i]["sponsorName"], result[i]["mgZip"], result[i]["wins"], result[i]["losses"], result[i]["id"]);
-                teamArray.push(tempTeam);                        
-              };
-              writeResults();
-              } 
-            });
-          } 
-        });
-      };
-
-      function writeResults() {
-
-        teamArray = sortArray(teamArray); //simply a method call
-        
-        $("#standings").html("");
-         for(var i = 0; i < teamArray.length; i++) {
-          //var textNode = document.createTextNode(teamArray[i].teamName);
-          
-          var divTeamName = document.createElement("div");
-
-          divTeamName.id = teamArray[i].teamId;
-
-          $(divTeamName).html(teamArray[i].teamName + " <button class='deleteBtn' onClick='deleteTeam(this.parentNode.id)'>Delete</button> Wins: " + teamArray[i].wins + " Losses: " + teamArray[i].losses);  
-      
-          if(i % 2 === 0) divTeamName.className = "grayClass popup";
-          else divTeamName.className = "lightGray popup";
-          document.getElementById("standings").appendChild(divTeamName);
-          var subDiv = document.createElement("div");
-
-          $(subDiv).html("Team Name: " + teamArray[i].teamName + "</br>Managed By: " + teamArray[i].mgName + "</br>Manager Phone: " + teamArray[i].phoneNum + "</br>Team Sponsor: " + teamArray[i].sponsorName + "</br>Zip Code: " + teamArray[i].mgZip);
-      
-          // var divText = document.createTextNode("");
-          // subDiv.appendChild(divText);
-          divTeamName.appendChild(subDiv);
-          $("#standings .popup div").hide();
-
-          $("#standings .popup").hover(
-            function() {
-              $(this).children().last().show();
-            },
-            function() {
-              $(this).children().last().hide();
-            });
-        }
-      };
-
-  	  
-
-  	  function createTeam(form) {
-  	  	var sampleTeam = new Team (form.teamName.value, form.mgName.value, form.phoneNum.value, form.sponsorName.value, form.mgZip.value, 0, 0, 0);
-        console.log(teamArray);
-        teamArray.push(sampleTeam);
-
-        
-        
-        $.ajax({
-          type: "POST",
-          url: "/backliftapp/teams",
-          data: {
-            teamName: form.teamName.value,
-            mgName: form.mgName.value,
-            phoneNum: form.phoneNum.value,
-            sponsorName: form.sponsorName.value,
-            mgZip: form.mgZip.value,
-            wins: 0,
-            losses: 0
-          },
-          success: function(result){
-            $("#teamForm")[0].reset();
-
-
-            sampleTeam.teamId = result['id'];
-
-            writeResults();
-          }
-          
-        });
-
-
-
-
-         
-      };
-
-   </script>
-
+    <script type="text/javascript">
+      $(document).ready(function() {
+        $("form").validate()
+      });    
+    </script>
 
   </head>
   <body>
-  	<!-- NAVBAR
+  <!-- NAVBAR
     ================================================== -->
-    <!--<div class="navbar-wrapper">
-      <!-- Wrap the .navbar in .container to center it within the absolutely positioned parent. -->
-      <div class="container">
+  <!--<div class="navbar-wrapper">
+  <!-- Wrap the .navbar in .container to center it within the absolutely positioned parent. -->
+  <div class="container">
+    <div class="navbar navbar-inverse">
+      <div class="navbar-inner">
+      <!-- Responsive Navbar Part 1: Button for triggering responsive navbar (not covered in tutorial). Include responsive CSS to utilize. -->
+        <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="brand" href="#">Beer League Baseball Challenge</a>
+        <!-- Responsive Navbar Part 2: Place all navbar contents you want collapsed withing .navbar-collapse.collapse. -->
+        
+        <a href="#myModal" role="button" class="btn" data-toggle="modal">Team Sign Up:</a>  
+        <!--Modal-->  
+        <div id="myModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+            <h3 id="myModalLabel">Team Sign Up:</h3>  
+          </div>
+          <div class="modal-body">
+            <form id="teamForm" class="form-horizontal" style="margin-top: 20px;">
+              <div class="control-group">
+                <label class="control-label" for="teamName">Team Name: </label>
+                <div class="controls">
+                  <input type="text" id="teamName" name="teamName" placeholder="Please enter your team name...">
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label" for="mgName">Manager Name: </label>
+                <div class="controls">
+                  <input type="text" id="mgName" name="mgName" placeholder="Enter the team manager name...">
+                </div>  
+              </div>
+              <div class="control-group">
+                <label class="control-label" for="phoneNum">Phone Number:</label>  
+                <div class="controls">
+                  <input type="text" id="phoneNum" name="phoneNum" placeholder="555-555-5555">
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label" for="sponsorName">Team Sponsor: </label>
+                <div class="controls">
+                  <input type="text" id="sponsorName" name="sponsorName" placeholder="Team sponsor...">
+                </div>
+              </div>
+              <div class="control-group input-prepend">
+                <label class="control-label" for="mgZip">Manager Zip Code: </label>
+                <div class="controls">
+                  <input type="text" id="mgZip" name="mgZip" placeholder="37212">
+                </div>
+              </div>
+              <div class="control-group">
+                <div class="controls">
+                  <input type="submit" name="button" value="Submit">
+                </div>
+              </div>  
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+          </div>  
+        </div>
 
-        <div class="navbar navbar-inverse">
-          <div class="navbar-inner">
-            <!-- Responsive Navbar Part 1: Button for triggering responsive navbar (not covered in tutorial). Include responsive CSS to utilize. -->
-            <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-            </button>
-            <a class="brand" href="#">Beer League Baseball Challenge</a>
-            <!-- Responsive Navbar Part 2: Place all navbar contents you want collapsed withing .navbar-collapse.collapse. -->
-            
-          </div><!-- /.navbar-inner -->
-        </div><!-- /.navbar -->
-    
+        <a href="#scoreModal" role="button" class="btn" data-toggle="modal">Update Team Scores</a>  
+        <!--Modal-->  
+        <div id="scoreModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+            <h3 id="myModalLabel">Update Scores: </h3> 
+            <form id="scoreForm" class="form-horizontal" style="margin-top: 20px;">
+              <div class="control-group">
+                <label class="control-label" for="gameWeek">Week: </label>
+              <div class="controls">
+                <input type="text" id="gameWeek" name="gameWeek">  
+              </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label" for="gameNum">Game Number: </label>
+                <div class="controls">
+                  <input type="text" id="gameNum" name="gameNum">  
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label" for="scoreOne">Team One: </label>
+              <div class="controls">
+                <input type="text" id="scoreOne" name="scoreOne">  
+              </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label" for="scoreTwo">Team Two: </label>
+                  <div class="controls">
+                    <input type="text" id="scoreTwo" name="scoreTwo">  
+                  </div>
+              </div>
+              <div class="control-group">
+                <div class="controls">
+                  <input type="submit" name="button" value="Submit">
+                </div>
+              </div>
+            </form> 
+          </div>
+          <div class="modal-footer">
+            <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+          </div> 
+        </div>
+      </div><!-- /.navbar-inner -->
+    </div><!-- /.navbar -->
+  </div>
 
     <div class="container">
-      <div class="row">
-       <div class="span2">
-        <form name="myform" action="" method="get" id="teamForm">
-          <p>Team Name: <input type="text" name="teamName" value=""></p>
-          <p>Manager Name: <input type="text" name="mgName" value=""></p>
-          <p>Phone Number: <input type="text" name="phoneNum" value=""></p>
-          <p>Sponsor: <input type="text" name="sponsorName" value=""></p>
-          <p>Zip Code: <input type="text" name="mgZip" value=""></p>
-          <input type="button" name="button" value="Submit" onClick="createTeam(this.form);">
-        </form>        
-      </div>
-      <div class="span8 offset2">
-        <p><strong>Standings:</strong></p><div id="standings"></div>
-      </div>
-     </div>
+       <div class="row">
+          <div class="span8 offset2">
+          <p><strong>Standings:</strong></p><div id="standings"></div>
+          </div>
+        </div>
+      </div>    
 
-    </div>      
-  
+      <div class="container">
+       <div class="row">
+          <div class="span8 offset2">
+          <p><strong>Schedule:</strong></p><div id="schedule"></div>
+          </div>
+        </div>
+      </div>   
+
   </body>
 </html>
